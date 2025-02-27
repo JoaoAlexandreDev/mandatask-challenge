@@ -31,7 +31,7 @@ export class AppController {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
-    if (password === user.password) {
+    if (password !== user.password) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
@@ -58,9 +58,14 @@ export class AppController {
 
   @UseGuards(AuthGuard('jwt'))
   @Get('tasks')
-  async getTasks(@Response() res): Promise<Response> {
-    const result = await this.taskRepository.get();
-    return res.status(200).json(result);
+  async getTasks(@Request() req, @Response() res): Promise<Response> {
+    try {
+      const authHeader = req.headers.authorization;
+      const result = await this.taskRepository.get(authHeader);
+      return res.status(200).json(result);
+    } catch (error) {
+      return res.status(401).json({ message: error.message });
+    }
   }
 
   @UseGuards(AuthGuard('jwt'))
@@ -79,7 +84,7 @@ export class AppController {
       return res.status(404).json({ message: 'Tarefa nao encontrada' });
     }
 
-    const result = await this.taskRepository.update(parseInt(id), {
+    const result = await this.taskRepository.update(parseInt(taskId), {
       ...task,
     });
 
