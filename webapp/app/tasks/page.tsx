@@ -20,28 +20,29 @@ export default function TasksPage() {
   const [taskInputs, setTaskInputs] = useState<{ [key: number]: string }>({})
 
   useEffect(() => {
-    const fetchTasks = async () => {
-      const response = await fetch('http://localhost:3003/tasks', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        setTasks(data)
-        const inputs = data.reduce((acc: { [key: number]: string }, task: Task) => {
-          acc[task.id] = task.name
-          return acc
-        }, {})
-        setTaskInputs(inputs)
-      } else {
-        alert('Failed to fetch tasks')
-      }
-    }
-
     fetchTasks()
   }, [])
+
+
+  const fetchTasks = async () => {
+    const response = await fetch('http://localhost:3003/tasks', {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+      },
+    })
+
+    if (response.ok) {
+      const data = await response.json()
+      setTasks(data)
+      const inputs = data.reduce((acc: { [key: number]: string }, task: Task) => {
+        acc[task.id] = task.name
+        return acc
+      }, {})
+      setTaskInputs(inputs)
+    } else {
+      alert('Failed to fetch tasks')
+    }
+  }
 
   const addTask = async () => {
     const task = {
@@ -49,6 +50,11 @@ export default function TasksPage() {
       name: newTask,
       scheduled_for: selectedDate,
       solved: false,
+    }
+    
+    if (!task.name.length || !task.scheduled_for.length) {
+      alert(`O nome e a data da tarefa são obrigatórios.`)
+      return;
     }
 
     await fetch('http://localhost:3003/task', {
@@ -59,8 +65,10 @@ export default function TasksPage() {
       },
       body: JSON.stringify(task),
     })
-    
+
     alert('Tarefa adicionada com sucesso!')
+
+    fetchTasks()
   }
 
   const toggleTask = async (taskId: number) => {
@@ -76,7 +84,8 @@ export default function TasksPage() {
     })
 
     if (response.ok) {
-      setTasks(tasks.map((task) => (task.id === taskId ? { ...task, solved: !task.solved } : task)))
+      fetchTasks()
+      alert(`Tarefa concluida com sucesso`)
     } else {
       alert('Falha ao atualizar a tarefa')
     }
@@ -88,6 +97,12 @@ export default function TasksPage() {
 
   const updateTaskName = async (taskId: number) => {
     const updatedName = taskInputs[taskId]
+
+    if (!updatedName.length) {
+      alert(`O nome da tarefa é obrigatório.`)
+      return;
+    }
+
     const response = await fetch(`http://localhost:3003/task/${taskId}`, {
       method: 'PATCH',
       headers: {
