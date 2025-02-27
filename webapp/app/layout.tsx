@@ -20,11 +20,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }> ) {
-  useEffect(()=> {
-    localStorage.removeItem('token')
-  }, [])
-
-
   return (
     <html lang="pt-BR">
       <body
